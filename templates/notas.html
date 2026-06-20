@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div>
+        <h1 class="page-title">Minhas Notas</h1>
+        <p class="page-subtitle" style="margin-bottom: 0;">Gerencie e audite seus documentos financeiros.</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 8px;">
+            <span style="color: var(--text-muted); font-size: 0.85rem; margin-right: 8px;">Soma Selecionada:</span>
+            <strong style="color: var(--brand-green); font-size: 1.1rem;" id="soma-total">R$ 0,00</strong>
+        </div>
+
+        <button class="btn-secondary"><i class='bx bx-download'></i> Exportar</button>
+        <button class="btn-primary" onclick="document.getElementById('file-input').click()"><i class='bx bx-plus'></i> Nova Nota</button>
+        <input type="file" id="file-input" style="display: none;" accept=".png, .jpg, .jpeg, .pdf">
+    </div>
+</div>
+
+<div class="card">
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Buscar por fornecedor, valor ou ID...">
+        </div>
+        
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <div class="tab-group">
+                <button class="tab-btn active">TODOS</button>
+                <button class="tab-btn">PIX</button>
+                <button class="tab-btn">NFC-E</button>
+            </div>
+            <button class="btn-secondary"><i class='bx bx-filter'></i> Filtros</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px;"><input type="checkbox" id="select-all"></th>
+                    <th>ID</th>
+                    <th>Documento</th>
+                    <th>Data de Upload</th>
+                    <th>Valor (R$)</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nota in notas %}
+                <tr>
+                    <td>
+                        <input type="checkbox" class="nota-checkbox" data-valor="{{ nota[3] }}">
+                    </td>
+                    <td>#{{ nota[0] }}</td>
+                    <td>
+                        <div style="font-weight: 600;">{{ nota[1] }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ nota[2] }}</div>
+                    </td>
+                    <td>{{ nota[4] }}</td>
+                    <td style="font-weight: 600; color: var(--brand-green);">{{ nota[3] }}</td>
+                    <td>
+                        {% if nota[3] != 'Não identificado' %}
+                            <span class="badge success">Processado</span>
+                        {% else %}
+                            <span class="badge error">Erro Leitura</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="/delete/{{ nota[0] }}" method="POST" style="display:inline;" onsubmit="return confirm('Apagar este documento permanentemente?');">
+                            <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                <i class='bx bx-trash' style="color: #f85149; font-size: 1.2rem;"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        Você ainda não possui notas salvas no banco de dados.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.nota-checkbox');
+        const selectAllCheckbox = document.getElementById('select-all');
+        const somaTotalEl = document.getElementById('soma-total');
+
+        function atualizarSoma() {
+            let soma = 0;
+            
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    let valorStr = cb.getAttribute('data-valor');
+                    
+                    // Se houver um valor numérico válido (ignorando erros de OCR)
+                    if (valorStr && valorStr !== 'Não identificado') {
+                        // Converte o formato do Brasil "1.250,00" para formato de computador "1250.00"
+                        let valorLimpo = valorStr.replace(/\./g, '').replace(',', '.');
+                        let valorNum = parseFloat(valorLimpo);
+                        
+                        if (!isNaN(valorNum)) {
+                            soma += valorNum;
+                        }
+                    }
+                }
+            });
+
+            // Devolve o formato em Reais (R$) para a tela
+            somaTotalEl.textContent = soma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        // Adiciona o "ouvinte" em cada caixinha da tabela
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', atualizarSoma);
+        });
+
+        // Lógica do botão "Selecionar Todos" (no cabeçalho da tabela)
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                checkboxes.forEach(cb => {
+                    cb.checked = selectAllCheckbox.checked;
+                });
+                atualizarSoma(); // Atualiza a soma ao marcar todos
+            });
+        }
+    });
+</script>
+{% endblock %}

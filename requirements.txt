@@ -1,0 +1,9 @@
+Flask
+Werkzeug
+psycopg2-binary
+python-dotenv
+Pillow
+pytesseract
+pdfplumber
+pyzbar
+opencv-python-headless

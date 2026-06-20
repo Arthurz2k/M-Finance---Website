@@ -1,0 +1,10 @@
+# Ambiente virtual
+venv/
+env/
+
+# Arquivos sensíveis
+.env
+
+# Pastas de cache e temporárias
+__pycache__/
+uploads/

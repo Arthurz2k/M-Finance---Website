@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">Bem-vindo de volta.</h1>
+<p class="page-subtitle">Envie seus documentos financeiros mais recentes para processamento.</p>
+
+<div class="upload-box" onclick="document.getElementById('file-input').click()">
+    <i class='bx bx-cloud-upload upload-icon'></i>
+    <h3 style="margin-bottom: 8px;">Arraste e Solte os Documentos Aqui</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">ou clique para buscar no seu computador</p>
+    
+    <div class="upload-tags">
+        <span class="tag">PIX Receipts</span>
+        <span class="tag">Bank Statements</span>
+        <span class="tag">NFC-e XML/PDF</span>
+    </div>
+    
+    <input type="file" id="file-input" style="display: none;" accept=".png, .jpg, .jpeg, .pdf">
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 16px;">Envios Recentes</h3>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome do Documento</th>
+                    <th>Tipo</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nota in notas %}
+                <tr>
+                    <td>{{ nota[1] }}</td>
+                    <td>{{ nota[2] }}</td>
+                    <td>{{ nota[4] }}</td>
+                    <td style="font-weight: 600;">R$ {{ nota[3] }}</td>
+                    <td><span class="badge success"><i class='bx bx-check'></i> Processado</span></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        Nenhum documento processado ainda. Envie acima!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

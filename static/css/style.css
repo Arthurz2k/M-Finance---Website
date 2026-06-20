@@ -1,0 +1,277 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg-dark: #0d1117;
+    --bg-card: #161b22;
+    --border-color: #30363d;
+    --text-main: #e6edf3;
+    --text-muted: #8b949e;
+    --brand-green: #17c964;
+    --brand-green-hover: #13a854;
+    --brand-green-glow: rgba(23, 201, 100, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    display: flex;
+    height: 100vh;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    overflow: hidden;
+}
+
+/* ================= MENU LATERAL (SIDEBAR) ================= */
+.sidebar {
+    width: 260px;
+    background-color: var(--bg-card);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 20px;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+}
+
+.logo-container img { width: 40px; }
+.logo-container h2 { font-size: 1.3rem; color: var(--text-main); font-weight: 700; line-height: 1.2; }
+.logo-container span { font-size: 0.75rem; color: var(--text-muted); font-weight: 400; }
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.nav-link i { font-size: 1.25rem; }
+.nav-link:hover { background-color: rgba(255,255,255,0.05); color: var(--text-main); }
+.nav-link.active {
+    background-color: var(--brand-green-glow);
+    color: var(--brand-green);
+    border-left: 3px solid var(--brand-green);
+}
+
+/* ================= ÁREA PRINCIPAL ================= */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.header-search {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-dark);
+}
+
+.header-search input {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    outline: none;
+    width: 300px;
+}
+
+.page-container {
+    padding: 40px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.page-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+.page-subtitle { color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem; }
+
+/* ================= COMPONENTES (BOTÕES E INPUTS) ================= */
+.btn-primary {
+    background-color: var(--brand-green); color: var(--bg-dark);
+    padding: 10px 20px; border-radius: 8px; font-weight: 600;
+    border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary:hover { background-color: var(--brand-green-hover); }
+
+.btn-secondary {
+    background-color: var(--bg-card); color: var(--text-main);
+    padding: 10px 20px; border-radius: 8px; font-weight: 500;
+    border: 1px solid var(--border-color); cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-secondary:hover { background-color: rgba(255,255,255,0.05); }
+
+/* ================= ÁREA DE UPLOAD (DASHBOARD) ================= */
+.upload-box {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 50px 20px;
+    text-align: center;
+    background-color: var(--bg-card);
+    margin-bottom: 30px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.upload-box:hover { border-color: var(--brand-green); background-color: var(--bg-dark); }
+.upload-icon { font-size: 2.5rem; color: var(--brand-green); margin-bottom: 16px; }
+.upload-tags { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+.tag { padding: 4px 12px; background: rgba(255,255,255,0.05); border-radius: 20px; font-size: 0.75rem; color: var(--text-muted); border: 1px solid var(--border-color); }
+
+/* ================= TABELAS E CARDS ================= */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th { text-align: left; padding: 16px; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-color); font-weight: 600; }
+td { padding: 16px; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+
+/* Status Badges */
+.badge { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.badge.success { background: rgba(23, 201, 100, 0.1); color: var(--brand-green); }
+.badge.processing { background: rgba(56, 139, 253, 0.1); color: #58a6ff; }
+.badge.error { background: rgba(248, 81, 73, 0.1); color: #f85149; }
+
+/* ================= ESPECÍFICO TELA DE NOTAS ================= */
+.toolbar { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 24px; align-items: center; }
+.search-group { display: flex; flex: 1; gap: 12px; }
+.search-input { flex: 1; max-width: 400px; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); outline: none; }
+.tab-group { display: flex; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+.tab-btn { padding: 10px 20px; background: var(--bg-card); border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 0.85rem; border-right: 1px solid var(--border-color); }
+.tab-btn.active { background: var(--bg-dark); color: var(--text-main); }
+.tab-btn:last-child { border-right: none; }
+
+/* ================= RESPONSIVIDADE E MOBILE ================= */
+.mobile-menu-btn {
+    display: none;
+    font-size: 1.8rem;
+    color: var(--text-main);
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+/* Envolve as tabelas para rolagem no celular */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .mobile-menu-btn { display: block; }
+    
+    /* Esconde a barra lateral fora da tela */
+    .sidebar {
+        position: fixed;
+        left: -300px;
+        top: 0;
+        height: 100%;
+        transition: 0.3s ease;
+        z-index: 1000;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+    }
+    
+    /* Classe para abrir a barra lateral */
+    .sidebar.open { left: 0; }
+    
+    .header-search { padding: 0 20px; }
+    .header-search input { width: 100%; }
+    
+    .page-container { padding: 20px; }
+    
+    .toolbar { flex-direction: column; align-items: stretch; gap: 15px; }
+    .search-input { max-width: 100%; }
+}
+
+/* ================= POP-UP DE CARREGAMENTO ================= */
+.loading-overlay {
+    position: fixed;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(13, 17, 23, 0.85); /* Fundo escuro semitransparente */
+    backdrop-filter: blur(5px); /* Efeito de desfoque no fundo */
+    display: none; /* Escondido por padrão, o JS vai ativar */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Fica por cima de tudo no site */
+}
+
+.spinner {
+    width: 60px; 
+    height: 60px;
+    border: 6px solid var(--border-color);
+    border-top-color: var(--brand-green);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin { 
+    100% { transform: rotate(360deg); } 
+}
+
+.loading-text {
+    color: var(--text-main);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.loading-subtext {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 8px;
+}
+
+/* ================= MODAL DE ERRO / AVISOS ================= */
+.modal-overlay {
+    position: fixed; 
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(13, 17, 23, 0.85); 
+    backdrop-filter: blur(5px);
+    display: none; /* Escondido por padrão */
+    justify-content: center; align-items: center; 
+    z-index: 10000;
+}
+
+.modal-content {
+    background: var(--bg-card); 
+    border: 1px solid var(--border-color);
+    border-top: 4px solid #f85149; /* Borda superior vermelha */
+    border-radius: 12px; 
+    padding: 40px; 
+    width: 90%; max-width: 400px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8); 
+    text-align: center;
+}
+
+.modal-icon {
+    font-size: 3.5rem; 
+    color: #f85149; 
+    margin-bottom: 16px;
+}

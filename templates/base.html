@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marildo Financial Ops</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Processando Documento...</div>
+        <div class="loading-subtext">A inteligência artificial está lendo os dados. Isso pode levar alguns segundos.</div>
+    </div>
+
+    <div class="modal-overlay" id="error-modal">
+        <div class="modal-content">
+            <i class='bx bx-error-circle modal-icon'></i>
+            <h3 style="margin-bottom: 10px; color: var(--text-main);">Falha na Importação</h3>
+            <p id="error-message" style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem;">
+                Mensagem de erro aqui.
+            </p>
+            <button class="btn-secondary" style="width: 100%; justify-content: center;" onclick="closeErrorModal()">Entendi, tentar novamente</button>
+        </div>
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <div class="logo-container" style="margin-bottom: 0;">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo">
+                <h2>Marildo<br><span>Financial Ops</span></h2>
+            </div>
+            <i class='bx bx-x mobile-menu-btn' id="close-menu" style="margin: 0; display: none;"></i>
+        </div>
+
+        <nav>
+            <a href="/dashboard" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <i class='bx bx-grid-alt'></i> Painel
+            </a>
+            <a href="/notas" class="nav-link {% if request.endpoint == 'notas' %}active{% endif %}">
+                <i class='bx bx-receipt'></i> Notas
+            </a>
+            <a href="#" class="nav-link">
+                <i class='bx bx-line-chart'></i> Análises
+            </a>
+        </nav>
+        
+        <div style="margin-top: auto;">
+            <a href="/logout" class="nav-link">
+                <i class='bx bx-log-out'></i> Sair
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header-search">
+            <button class="mobile-menu-btn" id="open-menu"><i class='bx bx-menu'></i></button>
+            <i class='bx bx-search' style="color: var(--text-muted); margin-right: 10px; font-size: 1.2rem;"></i>
+            <input type="text" placeholder="Buscar no painel...">
+        </header>
+
+        <section class="page-container">
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+
+    <script>
+        // Lógica do Menu Mobile
+        const sidebar = document.getElementById('sidebar');
+        const openBtn = document.getElementById('open-menu');
+        const closeBtn = document.getElementById('close-menu');
+
+        openBtn.addEventListener('click', () => { sidebar.classList.add('open'); closeBtn.style.display = 'block'; });
+        closeBtn.addEventListener('click', () => { sidebar.classList.remove('open'); });
+
+        // Lógica do Modal de Erro
+        const errorModal = document.getElementById('error-modal');
+        const errorMessage = document.getElementById('error-message');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        function showError(msg) {
+            loadingOverlay.style.display = 'none'; // Esconde a tela de carregamento se estiver aberta
+            errorMessage.textContent = msg;        // Coloca o texto que o Python devolveu
+            errorModal.style.display = 'flex';     // Mostra o pop-up
+        }
+
+        function closeErrorModal() {
+            errorModal.style.display = 'none';
+        }
+
+        // Lógica de Upload e Pop-up de Carregamento
+        const fileInput = document.getElementById('file-input');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', this.files[0]);
+                    
+                    loadingOverlay.style.display = 'flex';
+                    
+                    fetch('/upload', { method: 'POST', body: formData })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.error) {
+                            showError(data.error); // <--- Chama o novo pop-up de erro!
+                            fileInput.value = ''; 
+                        } else {
+                            window.location.reload(); 
+                        }
+                    })
+                    .catch(error => {
+                        // Se o Python "quebrar" internamente, caímos aqui
+                        showError("Ocorreu um erro interno ao tentar ler a imagem. Verifique se o formato é suportado e tente novamente.");
+                        fileInput.value = '';
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
