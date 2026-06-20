@@ -1,0 +1,19 @@
+{
+  "hosting": {
+    "public": "public_dummy",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "marildo-financial-backend",
+          "region": "us-central1"
+        }
+      }
+    ]
+  }
+}
