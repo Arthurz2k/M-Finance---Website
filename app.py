@@ -46,10 +46,20 @@ def setup_database():
             nome_arquivo VARCHAR(255),
             tipo VARCHAR(50),
             valor VARCHAR(50),
-            tag VARCHAR(50) DEFAULT 'Outros', -- NOVA COLUNA ADICIONADA AQUI
             data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # ---> ADICIONE ESTE BLOCO AQUI <---
+    # Força a criação da coluna 'tag' caso a tabela seja antiga e ainda não a tenha
+    try:
+        cur.execute('''
+            ALTER TABLE notas_salvas 
+            ADD COLUMN IF NOT EXISTS tag VARCHAR(50) DEFAULT 'Outros';
+        ''')
+    except Exception as e:
+        print(f"Aviso ao alterar tabela: {e}")
+    # -----------------------------------
     
     cur.execute("SELECT * FROM usuarios WHERE email = 'admin@marildo.com'")
     if not cur.fetchone():
