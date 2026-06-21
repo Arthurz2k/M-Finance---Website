@@ -54,3 +54,44 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Erro no upload:', error));
     }
 });
+
+<script>
+async function processarUploads(arquivos) {
+    if (arquivos.length === 0) return;
+
+    // Se você tiver o campo de tag na tela, ele pega o valor, se não, envia 'Outros'
+    const tagElement = document.getElementById('tag');
+    const tag = tagElement ? tagElement.value : 'Outros';
+
+    let sucesso = 0;
+    let falha = 0;
+
+    // Aviso de início (você pode substituir pelo seu modal de carregamento)
+    alert(`Iniciando o processamento de ${arquivos.length} arquivo(s)... Aguarde.`);
+
+    // Faz o loop enviando um arquivo por vez
+    for (let i = 0; i < arquivos.length; i++) {
+        let formData = new FormData();
+        formData.append('file', arquivos[i]);
+        formData.append('tag', tag);
+
+        try {
+            let response = await fetch('/upload', { method: 'POST', body: formData });
+            let result = await response.json();
+            
+            if (response.ok && !result.error) {
+                sucesso++;
+            } else {
+                falha++;
+                console.error("Erro no arquivo:", arquivos[i].name, result.error);
+            }
+        } catch (err) {
+            falha++;
+            console.error("Falha na conexão do arquivo:", arquivos[i].name);
+        }
+    }
+
+    alert(`Processamento concluído!\n✅ Sucessos: ${sucesso}\n❌ Falhas ou Duplicados: ${falha}`);
+    window.location.reload(); // Recarrega a página para mostrar os novos dados
+}
+</script>

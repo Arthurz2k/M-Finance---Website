@@ -156,15 +156,28 @@ def notas():
 # -------------------------------------------------------------------
 # ROTA PARA DELETAR UMA NOTA
 # -------------------------------------------------------------------
-@app.route('/delete/<int:id>', methods=['POST'])
-def delete_nota(id):
+@app.route('/delete_bulk', methods=['POST'])
+def delete_bulk():
+    # Recebe a lista de IDs enviada pelo JavaScript
+    dados = request.get_json()
+    ids_para_deletar = dados.get('ids', [])
+    
+    if not ids_para_deletar:
+        return jsonify({'error': 'Nenhum item selecionado'}), 400
+
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM notas_salvas WHERE id = %s", (id,))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return redirect(request.referrer)
+    try:
+        # O comando '= ANY(%s)' é a forma mais segura de deletar múltiplos itens no PostgreSQL
+        cur.execute("DELETE FROM notas_salvas WHERE id = ANY(%s)", (ids_para_deletar,))
+        conn.commit()
+        return jsonify({'message': f'{len(ids_para_deletar)} notas excluídas com sucesso'})
+    except Exception as e:
+        print(f"Erro ao excluir em massa: {e}")
+        return jsonify({'error': 'Erro no banco de dados ao excluir'}), 500
+    finally:
+        cur.close()
+        conn.close()
 
 # -------------------------------------------------------------------
 # MOTOR DE UPLOAD (ATUALIZADO COM O NOVO SDK GOOGLE-GENAI)

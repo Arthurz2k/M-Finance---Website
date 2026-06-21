@@ -13,9 +13,13 @@
             <strong style="color: var(--brand-green); font-size: 1.1rem;" id="soma-total">R$ 0,00</strong>
         </div>
 
+        <button id="btnExcluirMassa" class="btn-primary" style="display: none; background-color: #f85149; border-color: #f85149;" onclick="excluirSelecionados()">
+            <i class='bx bx-trash'></i> Excluir (<span id="contagem-excluir">0</span>)
+        </button>
+
         <button class="btn-secondary"><i class='bx bx-download'></i> Exportar</button>
         <button class="btn-primary" onclick="document.getElementById('file-input').click()"><i class='bx bx-plus'></i> Nova Nota</button>
-        <input type="file" id="file-input" style="display: none;" accept=".png, .jpg, .jpeg, .pdf">
+        <input type="file" id="file-input" multiple style="display: none;" accept=".png, .jpg, .jpeg, .pdf" onchange="processarUploads(this.files)">
     </div>
 </div>
 
@@ -52,7 +56,7 @@
                 {% for nota in notas %}
                 <tr>
                     <td>
-                        <input type="checkbox" class="nota-checkbox" data-valor="{{ nota[3] }}">
+                        <input type="checkbox" class="nota-checkbox" value="{{ nota[0] }}" data-valor="{{ nota[3] }}">
                     </td>
                     <td>#{{ nota[0] }}</td>
                     <td>
@@ -93,20 +97,22 @@
         const checkboxes = document.querySelectorAll('.nota-checkbox');
         const selectAllCheckbox = document.getElementById('select-all');
         const somaTotalEl = document.getElementById('soma-total');
+        const btnExcluir = document.getElementById('btnExcluirMassa');
+        const contagemExcluir = document.getElementById('contagem-excluir');
 
-        function atualizarSoma() {
+        // Função Única que Atualiza Soma e Mostra o Botão de Excluir
+        function atualizarSelecao() {
             let soma = 0;
+            let selecionados = 0;
             
             checkboxes.forEach(cb => {
                 if (cb.checked) {
+                    selecionados++;
                     let valorStr = cb.getAttribute('data-valor');
                     
-                    // Se houver um valor numérico válido (ignorando erros de OCR)
                     if (valorStr && valorStr !== 'Não identificado') {
-                        // Converte o formato do Brasil "1.250,00" para formato de computador "1250.00"
                         let valorLimpo = valorStr.replace(/\./g, '').replace(',', '.');
                         let valorNum = parseFloat(valorLimpo);
-                        
                         if (!isNaN(valorNum)) {
                             soma += valorNum;
                         }
@@ -114,24 +120,72 @@
                 }
             });
 
-            // Devolve o formato em Reais (R$) para a tela
+            // Atualiza a interface da Soma
             somaTotalEl.textContent = soma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            // Atualiza a interface do Botão de Excluir
+            if (selecionados > 0) {
+                btnExcluir.style.display = 'inline-flex';
+                contagemExcluir.textContent = selecionados;
+            } else {
+                btnExcluir.style.display = 'none';
+            }
         }
 
-        // Adiciona o "ouvinte" em cada caixinha da tabela
-        checkboxes.forEach(cb => {
-            cb.addEventListener('change', atualizarSoma);
-        });
+        // Adiciona os ouvintes de clique
+        checkboxes.forEach(cb => cb.addEventListener('change', atualizarSelecao));
 
-        // Lógica do botão "Selecionar Todos" (no cabeçalho da tabela)
         if (selectAllCheckbox) {
             selectAllCheckbox.addEventListener('change', function() {
-                checkboxes.forEach(cb => {
-                    cb.checked = selectAllCheckbox.checked;
-                });
-                atualizarSoma(); // Atualiza a soma ao marcar todos
+                checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+                atualizarSelecao(); 
             });
         }
     });
+
+    // Função que envia o comando de exclusão em massa para o Backend Python
+    function excluirSelecionados() {
+        let checkboxes = document.querySelectorAll('.nota-checkbox:checked');
+        let ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        if (confirm(`Tem certeza que deseja excluir permanentemente ${ids.length} documento(s)?`)) {
+            fetch('/delete_bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: ids })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Erro ao excluir: " + data.error);
+                } else {
+                    window.location.reload();
+                }
+            })
+            .catch(err => {
+                console.error("Erro na requisição:", err);
+                alert("Falha na comunicação com o servidor.");
+            });
+        }
+    }
+    
+    // Suporte para fazer upload rápido por aqui também
+    async function processarUploads(arquivos) {
+        if (arquivos.length === 0) return;
+        let sucesso = 0, falha = 0;
+        alert(`Processando ${arquivos.length} arquivo(s)...`);
+
+        for (let i = 0; i < arquivos.length; i++) {
+            let formData = new FormData();
+            formData.append('file', arquivos[i]);
+            formData.append('tag', 'Outros'); 
+            try {
+                let response = await fetch('/upload', { method: 'POST', body: formData });
+                if (response.ok) sucesso++; else falha++;
+            } catch (err) { falha++; }
+        }
+        alert(`Processamento concluído!\n✅ Sucesso: ${sucesso}\n❌ Falha: ${falha}`);
+        window.location.reload();
+    }
 </script>
 {% endblock %}

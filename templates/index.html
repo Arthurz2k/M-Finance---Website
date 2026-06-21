@@ -4,18 +4,28 @@
 <h1 class="page-title">Bem-vindo de volta.</h1>
 <p class="page-subtitle">Envie seus documentos financeiros mais recentes para processamento.</p>
 
-<div class="upload-box" onclick="document.getElementById('file-input').click()">
+<div class="upload-box" style="cursor: default;">
     <i class='bx bx-cloud-upload upload-icon'></i>
-    <h3 style="margin-bottom: 8px;">Arraste e Solte os Documentos Aqui</h3>
-    <p style="color: var(--text-muted); font-size: 0.9rem;">ou clique para buscar no seu computador</p>
+    <h3 style="margin-bottom: 8px;">Envie seus Documentos</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">Selecione arquivos soltos ou uma pasta inteira do seu computador</p>
+    
+    <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 25px;">
+        <label class="btn-primary" style="cursor: pointer;">
+            <i class='bx bx-file'></i> Arquivos Soltos
+            <input type="file" id="fileInput" name="files" multiple accept=".png, .jpg, .jpeg, .pdf" style="display: none;" onchange="processarUploads(this.files)">
+        </label>
+
+        <label class="btn-secondary" style="cursor: pointer;">
+            <i class='bx bx-folder'></i> Enviar Pasta
+            <input type="file" id="folderInput" name="folder" webkitdirectory multiple style="display: none;" onchange="processarUploads(this.files)">
+        </label>
+    </div>
     
     <div class="upload-tags">
         <span class="tag">PIX Receipts</span>
         <span class="tag">Bank Statements</span>
         <span class="tag">NFC-e XML/PDF</span>
     </div>
-    
-    <input type="file" id="file-input" style="display: none;" accept=".png, .jpg, .jpeg, .pdf">
 </div>
 
 <div class="card">
@@ -51,4 +61,40 @@
         </table>
     </div>
 </div>
+
+<script>
+async function processarUploads(arquivos) {
+    if (arquivos.length === 0) return;
+
+    let sucesso = 0;
+    let falha = 0;
+
+    alert(`Iniciando o processamento de ${arquivos.length} arquivo(s)... Por favor, não feche a página.`);
+
+    for (let i = 0; i < arquivos.length; i++) {
+        let formData = new FormData();
+        formData.append('file', arquivos[i]);
+        // Como o index.html não tem o seletor de tag na tela, enviamos o padrão 'Outros'
+        formData.append('tag', 'Outros'); 
+
+        try {
+            let response = await fetch('/upload', { method: 'POST', body: formData });
+            let result = await response.json();
+            
+            if (response.ok && !result.error) {
+                sucesso++;
+            } else {
+                falha++;
+                console.error("Erro no arquivo:", arquivos[i].name, result.error);
+            }
+        } catch (err) {
+            falha++;
+            console.error("Falha de conexão com o arquivo:", arquivos[i].name);
+        }
+    }
+
+    alert(`Processamento concluído!\n✅ Sucesso: ${sucesso} arquivos\n❌ Falha/Duplicado: ${falha} arquivos`);
+    window.location.reload();
+}
+</script>
 {% endblock %}
