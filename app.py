@@ -46,6 +46,7 @@ def setup_database():
             nome_arquivo VARCHAR(255),
             tipo VARCHAR(50),
             valor VARCHAR(50),
+            tag VARCHAR(50) DEFAULT 'Outros', -- NOVA COLUNA ADICIONADA AQUI
             data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -90,6 +91,34 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+# A rota agora só aceita POST (envio de formulário)
+@app.route('/register', methods=['POST'])
+def register():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Verifica se o e-mail já existe
+    cur.execute('SELECT id FROM usuarios WHERE email = %s', (email,))
+    if cur.fetchone():
+        cur.close()
+        conn.close()
+        # Devolve para o login mostrando o erro
+        return render_template('login.html', error="Este e-mail já está em uso.")
+        
+    # Cria a senha criptografada e salva o usuário
+    hashed_pw = generate_password_hash(password)
+    cur.execute("INSERT INTO usuarios (email, senha) VALUES (%s, %s)", (email, hashed_pw))
+    conn.commit()
+    
+    cur.close()
+    conn.close()
+    
+    # Devolve para o login mostrando a mensagem de sucesso!
+    return render_template('login.html', success="Conta criada com sucesso! Faça o login.")
 
 # -------------------------------------------------------------------
 # ROTAS DAS TELAS (BUSCANDO DO BANCO DE DADOS NEON)
@@ -209,10 +238,12 @@ def upload_file():
                 dados_ia = json.loads(texto_resposta)
                 valor_encontrado = dados_ia.get("valor", "Não identificado")
                 tipo_doc = dados_ia.get("tipo", "Imagem")
+            # Captura a tag que o usuário selecionar na tela (se existir o campo)
+            tag_selecionada = request.form.get('tag', 'Outros')
 
-            # Grava as informações finais no banco de dados
-            cur.execute('INSERT INTO notas_salvas (hash_arquivo, nome_arquivo, tipo, valor) VALUES (%s, %s, %s, %s)', 
-                        (file_hash, filename, tipo_doc, valor_encontrado))
+            # Grava as informações finais no banco de dados INCLUINDO A TAG
+            cur.execute('INSERT INTO notas_salvas (hash_arquivo, nome_arquivo, tipo, valor, tag) VALUES (%s, %s, %s, %s, %s)', 
+                        (file_hash, filename, tipo_doc, valor_encontrado, tag_selecionada))
             conn.commit()
 
         except Exception as e:
@@ -225,6 +256,27 @@ def upload_file():
                 os.remove(filepath)
 
         return jsonify({'message': 'Sucesso', 'valor': valor_encontrado, 'tipo': tipo_doc})
+
+@app.route('/api/nota/<int:nota_id>')
+def obter_detalhes_nota(nota_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    # Busca a nota específica no banco
+    cur.execute("SELECT id, nome_arquivo, tipo, valor, tag, TO_CHAR(data_upload, 'DD/MM/YYYY HH24:MI') FROM notas_salvas WHERE id = %s", (nota_id,))
+    nota = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    if nota:
+        return jsonify({
+            "id": nota[0],
+            "nome_arquivo": nota[1],
+            "tipo": nota[2],
+            "valor": nota[3],
+            "tag": nota[4],
+            "data": nota[5]
+        })
+    return jsonify({"erro": "Nota não encontrada"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
