@@ -92,6 +92,23 @@
     </div>
 </div>
 
+<div id="uploadToast" class="upload-toast">
+    <div class="toast-header">
+        <span class="toast-title"><i class='bx bx-cloud-upload'></i> <span id="toastTitleText">Analisando Inteligência...</span></span>
+        <button class="toast-close" onclick="fecharToast()">&times;</button>
+    </div>
+    <div class="toast-body">
+        <div class="progress-container">
+            <div id="uploadProgressBar" class="progress-bar-fill"></div>
+        </div>
+        <div class="progress-stats">
+            <span id="uploadPercentage">0%</span>
+            <span><span id="uploadCount">0</span> de <span id="uploadTotal">0</span> arquivos</span>
+        </div>
+        <ul id="uploadLog" class="upload-log"></ul>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const checkboxes = document.querySelectorAll('.nota-checkbox');
@@ -100,7 +117,6 @@
         const btnExcluir = document.getElementById('btnExcluirMassa');
         const contagemExcluir = document.getElementById('contagem-excluir');
 
-        // Função Única que Atualiza Soma e Mostra o Botão de Excluir
         function atualizarSelecao() {
             let soma = 0;
             let selecionados = 0;
@@ -120,10 +136,8 @@
                 }
             });
 
-            // Atualiza a interface da Soma
             somaTotalEl.textContent = soma.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
-            // Atualiza a interface do Botão de Excluir
             if (selecionados > 0) {
                 btnExcluir.style.display = 'inline-flex';
                 contagemExcluir.textContent = selecionados;
@@ -132,7 +146,6 @@
             }
         }
 
-        // Adiciona os ouvintes de clique
         checkboxes.forEach(cb => cb.addEventListener('change', atualizarSelecao));
 
         if (selectAllCheckbox) {
@@ -143,7 +156,6 @@
         }
     });
 
-    // Função que envia o comando de exclusão em massa para o Backend Python
     function excluirSelecionados() {
         let checkboxes = document.querySelectorAll('.nota-checkbox:checked');
         let ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
@@ -168,24 +180,91 @@
             });
         }
     }
+
+    function fecharToast() {
+        document.getElementById('uploadToast').style.display = 'none';
+    }
     
-    // Suporte para fazer upload rápido por aqui também
     async function processarUploads(arquivos) {
         if (arquivos.length === 0) return;
-        let sucesso = 0, falha = 0;
-        alert(`Processando ${arquivos.length} arquivo(s)...`);
+
+        const toast = document.getElementById('uploadToast');
+        const titleText = document.getElementById('toastTitleText');
+        const progressBar = document.getElementById('uploadProgressBar');
+        const percentageText = document.getElementById('uploadPercentage');
+        const countText = document.getElementById('uploadCount');
+        const totalText = document.getElementById('uploadTotal');
+        const logList = document.getElementById('uploadLog');
+
+        logList.innerHTML = '';
+        progressBar.style.width = '0%';
+        progressBar.style.backgroundColor = 'var(--brand-green)';
+        percentageText.innerText = '0%';
+        countText.innerText = '0';
+        totalText.innerText = arquivos.length;
+        titleText.innerText = 'Processando IA...';
+        toast.style.display = 'flex';
+
+        let falha = 0;
 
         for (let i = 0; i < arquivos.length; i++) {
+            let file = arquivos[i];
             let formData = new FormData();
-            formData.append('file', arquivos[i]);
+            formData.append('file', file);
             formData.append('tag', 'Outros'); 
+
+            let li = document.createElement('li');
+            li.className = 'log-item';
+            li.innerHTML = `<span class="log-name" title="${file.name}">${file.name}</span> <span class="log-status log-loading">Lendo...</span>`;
+            logList.appendChild(li);
+            logList.scrollTop = logList.scrollHeight;
+
             try {
                 let response = await fetch('/upload', { method: 'POST', body: formData });
-                if (response.ok) sucesso++; else falha++;
-            } catch (err) { falha++; }
+                let result = await response.json();
+                
+                let statusSpan = li.querySelector('.log-status');
+
+                if (response.ok && !result.error) {
+                    statusSpan.className = 'log-status log-success';
+                    statusSpan.innerText = '✅ OK';
+                } else {
+                    falha++;
+                    statusSpan.className = 'log-status log-error';
+                    // Imprime o erro diretamente na tela para fácil visualização
+                    let msgErro = result.error ? result.error : "Erro no servidor";
+                    statusSpan.innerHTML = `❌ <span style="font-weight: normal; font-size: 0.75rem;">${msgErro}</span>`;
+                }
+            } catch (err) {
+                falha++;
+                li.querySelector('.log-status').className = 'log-status log-error';
+                li.querySelector('.log-status').innerText = '❌ Falha Conexão';
+            }
+
+            let concluidos = i + 1;
+            let porcentagem = Math.round((concluidos / arquivos.length) * 100);
+            progressBar.style.width = porcentagem + '%';
+            percentageText.innerText = porcentagem + '%';
+            countText.innerText = concluidos;
         }
-        alert(`Processamento concluído!\n✅ Sucesso: ${sucesso}\n❌ Falha: ${falha}`);
-        window.location.reload();
+
+        if (falha === arquivos.length) {
+            progressBar.style.backgroundColor = '#f85149'; 
+            titleText.innerText = 'Falha no Processamento';
+        } else if (falha > 0) {
+            progressBar.style.backgroundColor = '#d29922'; 
+            titleText.innerText = 'Concluído com Alertas';
+        } else {
+            titleText.innerText = 'Uploads Concluídos!';
+        }
+
+        logList.innerHTML += `
+            <li class="log-item" style="justify-content: center; margin-top: 10px; border: none;">
+                <button class="btn-primary" onclick="window.location.reload()" style="padding: 6px 20px; font-size: 0.85rem;">
+                    <i class='bx bx-refresh'></i> Atualizar Tela
+                </button>
+            </li>`;
+        logList.scrollTop = logList.scrollHeight;
     }
 </script>
 {% endblock %}
